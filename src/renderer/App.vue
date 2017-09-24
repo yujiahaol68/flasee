@@ -11,5 +11,7 @@
 </script>
 
 <style>
-  /* CSS */
+::-webkit-scrollbar {
+  display: none;
+}
 </style>

@@ -11,18 +11,19 @@
     <div class="content">
       <div class="content-left">
         <div class="container">
-          <mu-flat-button icon="add_box" class="flat-button" @click="toggleNewTaskDialog"/>
+          <mu-flat-button icon="add" backgroundColor="#607d8b" color="#FFF" class="flat-button" @click="toggleNewTaskDialog"/>
         </div>
         <mu-divider/>
         <mu-list @change="handleListChange" :value="taskSelected">
           <mu-sub-header>任务列表</mu-sub-header>
           <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" >
-            <mu-icon slot="left" value="insert_drive_file" />
+            <mu-icon slot="left" value="insert_drive_file" color="blue"/>
             <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
               <mu-menu-item value="play" title="播放" />
               <mu-menu-item value="pause" title="暂停任务" />
               <mu-menu-item value="delete" title="删除任务" />
             </mu-icon-menu>
+            <mu-linear-progress mode="determinate" v-bind:value="task.progress"/>
           </mu-list-item>
         </mu-list>
       </div>
@@ -39,9 +40,9 @@
     <div>
       <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
         普通任务<br/>
-        <mu-text-field v-model="normalNewTaskUrl" hintText="普通链接地址" fullWidth /><br/>
+        <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" fullWidth /><br/>
         磁力任务<br/>
-        <mu-text-field v-model="btNewTaskUrl" hintText="磁力链接地址" fullWidth/><br/>
+        <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" fullWidth/><br/>
         <mu-flat-button slot="actions" @click="confirmNewTask" label="确定"/>
         <mu-flat-button slot="actions" @click="closeNewTaskDialog" label="取消" secondary/>
       </mu-dialog>
@@ -61,13 +62,17 @@ export default {
           name: '任务1',
           kind: 'BT',
           canStreamPlay: true,
-          torrentId: 'https://rarbg.is/download.php?id=7p93ke2&f=BBC.Drugs.Map.of.Britain.Fentanyl.Deadlier.Than.Heroin.720p.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent'
+          torrentId: 'https://rarbg.is/download.php?id=7p93ke2&f=BBC.Drugs.Map.of.Britain.Fentanyl.Deadlier.Than.Heroin.720p.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
+          progress: 30,
+          downLoading: true
         },
         {
           name: '任务2',
           kind: 'BT',
           canStreamPlay: true,
-          torrentId: 'https://rarbg.is/download.php?id=jkciz3b&f=The.End.of.Memory.1080.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent'
+          torrentId: 'https://rarbg.is/download.php?id=jkciz3b&f=The.End.of.Memory.1080.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
+          progress: 60,
+          downLoading: false
         }
       ],
       onPlayTitle: '影片名',
