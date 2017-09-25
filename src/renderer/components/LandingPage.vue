@@ -43,6 +43,7 @@
         <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" fullWidth /><br/>
         磁力任务<br/>
         <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" fullWidth/><br/>
+        <mu-flat-button @click="openBtFileSelectDialog" label="选择BT种子文件"/>
         <mu-flat-button slot="actions" @click="confirmNewTask" label="确定"/>
         <mu-flat-button slot="actions" @click="closeNewTaskDialog" label="取消" secondary/>
       </mu-dialog>
@@ -129,6 +130,18 @@ export default {
     },
     confirmNewTask () {
       this.showAddNewTaskDialog = false
+    },
+    openBtFileSelectDialog () {
+      this.$electron.remote.dialog.showOpenDialog({
+        title: '选择BT文件',
+        properties: ['openFile'],
+        filters: [
+          {name: 'BT种子文件', extensions: ['torrent']}
+        ]
+      }, btFilePath => {
+        this.showAddNewTaskDialog = false
+        console.log(btFilePath)
+      })
     }
   }
 }
