@@ -11,7 +11,8 @@
     <div class="content">
       <div class="content-left">
         <div class="container">
-          <mu-flat-button icon="add" backgroundColor="#607d8b" color="#FFF" class="flat-button" @click="toggleNewTaskDialog"/>
+          <mu-flat-button icon="add" color="#37474f" class="flat-button" @click="toggleNewTaskDialog"/>
+          <mu-flat-button icon="history" color="#78909c" class="flat-button"/>
         </div>
         <mu-divider/>
         <mu-list @change="handleListChange" :value="taskSelected">
@@ -23,7 +24,7 @@
               <mu-menu-item value="pause" title="暂停任务" />
               <mu-menu-item value="delete" title="删除任务" />
             </mu-icon-menu>
-            <mu-linear-progress mode="determinate" v-bind:value="task.progress"/>
+            <mu-linear-progress mode="determinate" v-bind:value="task.progress" color="#009688"/>
           </mu-list-item>
         </mu-list>
       </div>
@@ -52,12 +53,21 @@
 </template>
 
 <script>
+import fs from 'fs'
+import btParser from 'parse-torrent'
+
 export default {
   name: 'landing-page',
   data () {
     return {
       actionSelected: null,
       taskSelected: null,
+      newTaskReady: {
+        torrentId: '',
+        title: '',
+        downloadPath: '',
+        files: []
+      },
       tasks: [
         {
           name: '任务1',
@@ -138,10 +148,24 @@ export default {
         filters: [
           {name: 'BT种子文件', extensions: ['torrent']}
         ]
-      }, btFilePath => {
-        this.showAddNewTaskDialog = false
-        console.log(btFilePath)
+      }, btFilesPath => {
+        if (btFilesPath) {
+          console.log(btFilesPath)
+          this.showAddNewTaskDialog = false
+          const fileData = fs.readFileSync(btFilesPath[0])
+          this.getTorrentFileMeta(btParser(fileData))
+        }
       })
+    },
+    getTorrentFileMeta (torrentInfo) {
+      console.log(torrentInfo)
+      this.newTaskReady.torrentId = torrentInfo.infoHash
+      this.newTaskReady.title = torrentInfo.name
+      this.newTaskReady.files = torrentInfo.files
+      this.confirmBtDownload()
+    },
+    confirmBtDownload () {
+      console.log('choose download path')
     }
   }
 }
