@@ -17,7 +17,7 @@
         <mu-divider/>
         <mu-list @change="handleListChange" :value="taskSelected">
           <mu-sub-header>任务列表</mu-sub-header>
-          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" >
+          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" describeText="362.74 kb/s">
             <mu-icon slot="left" value="insert_drive_file" color="blue"/>
             <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
               <mu-menu-item value="play" title="播放" />
@@ -38,17 +38,26 @@
       </div>
     </div>
 
-    <div>
-      <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
-        普通任务<br/>
-        <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" fullWidth /><br/>
-        磁力任务<br/>
-        <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" fullWidth/><br/>
-        <mu-flat-button @click="openBtFileSelectDialog" label="选择BT种子文件"/>
-        <mu-flat-button slot="actions" @click="confirmNewTask" label="确定"/>
-        <mu-flat-button slot="actions" @click="closeNewTaskDialog" label="取消" secondary/>
-      </mu-dialog>
-    </div>
+    <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
+      普通任务<br/>
+      <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" fullWidth /><br/>
+      磁力任务<br/>
+      <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" fullWidth/><br/>
+      <mu-flat-button @click="openBtFileSelectDialog" label="选择BT种子文件"/>
+      <mu-flat-button slot="actions" @click="confirmNewTask" label="确定"/>
+      <mu-flat-button slot="actions" @click="closeNewTaskDialog" label="取消" secondary/>
+    </mu-dialog>
+    <mu-dialog :open="showNewTaskConfigDialog" title="新建BT任务">
+      <h3>任务名称</h3>
+      <mu-text-field v-bind:fullWidth="true" v-model="newTaskReady.title"/>
+      <h4>下载目录</h4>
+      <mu-text-field v-bind:fullWidth="true" v-model="newTaskReady.destination"/><br/>
+      <mu-raised-button label="选择目录" labelPosition="after" @click="selectDesDir">
+        <i class="iconfont icon-folder mu-icon" style="color:#fdd835;"></i>
+      </mu-raised-button>
+      <mu-flat-button slot="actions" @click="startToDownloadBT" label="立即下载"/>
+      <mu-flat-button slot="actions" @click="cancelDownloadTorrentReady" label="取消" secondary/>
+    </mu-dialog>
   </div>
 </template>
 
@@ -65,8 +74,8 @@ export default {
       newTaskReady: {
         torrentId: '',
         title: '',
-        downloadPath: '',
-        files: []
+        files: [],
+        destination: ''
       },
       tasks: [
         {
@@ -75,7 +84,8 @@ export default {
           canStreamPlay: true,
           torrentId: 'https://rarbg.is/download.php?id=7p93ke2&f=BBC.Drugs.Map.of.Britain.Fentanyl.Deadlier.Than.Heroin.720p.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
           progress: 30,
-          downLoading: true
+          downLoading: true,
+          speed: '0 kb/s'
         },
         {
           name: '任务2',
@@ -83,7 +93,8 @@ export default {
           canStreamPlay: true,
           torrentId: 'https://rarbg.is/download.php?id=jkciz3b&f=The.End.of.Memory.1080.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
           progress: 60,
-          downLoading: false
+          downLoading: false,
+          speed: '0 kb/s'
         }
       ],
       onPlayTitle: '影片名',
@@ -91,6 +102,7 @@ export default {
       showPlayer: false,
       inProgress: false,
       showAddNewTaskDialog: false,
+      showNewTaskConfigDialog: false,
       normalNewTaskUrl: '',
       btNewTaskUrl: ''
     }
@@ -141,6 +153,16 @@ export default {
     confirmNewTask () {
       this.showAddNewTaskDialog = false
     },
+    selectDesDir () {
+      this.$electron.remote.dialog.showOpenDialog({
+        title: '下载至',
+        properties: ['openDirectory']
+      }, desPaths => {
+        if (desPaths) {
+          this.newTaskReady.destination = desPaths[0]
+        }
+      })
+    },
     openBtFileSelectDialog () {
       this.$electron.remote.dialog.showOpenDialog({
         title: '选择BT文件',
@@ -162,10 +184,38 @@ export default {
       this.newTaskReady.torrentId = torrentInfo.infoHash
       this.newTaskReady.title = torrentInfo.name
       this.newTaskReady.files = torrentInfo.files
+      this.showAddNewTaskDialog = false
       this.confirmBtDownload()
     },
     confirmBtDownload () {
-      console.log('choose download path')
+      this.showNewTaskConfigDialog = true
+    },
+    startToDownloadBT () {
+      const { torrentId, destination, title } = this.newTaskReady
+      if (!this.$btClient.get(torrentId)) {
+        this.$btClient.add(torrentId, { path: destination }, torrent => {
+          this.tasks.push({
+            name: title,
+            kind: 'BT',
+            torrentId: torrentId,
+            canStreamPlay: false,
+            progress: 0,
+            downLoading: true,
+            speed: '0 kb/s'
+          })
+        })
+      }
+    },
+    cancelDownloadTorrentReady () {
+      console.log('user do not want to download this')
+    },
+    prettyBytes (num) {
+      const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+      if (num < 1) return num + ' B'
+      const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
+      num = Number((num / Math.pow(1000, exponent)).toFixed(2))
+      const unit = units[exponent]
+      return num + ' ' + unit
     }
   }
 }
