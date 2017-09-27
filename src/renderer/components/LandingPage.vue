@@ -16,12 +16,13 @@
         </div>
         <mu-divider/>
         <mu-list @change="handleListChange" :value="taskSelected">
-          <mu-sub-header>任务列表</mu-sub-header>
-          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" describeText="362.74 kb/s">
+          <mu-sub-header>进行中的任务</mu-sub-header>
+          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" v-bind:describeText="task.speed">
             <mu-icon slot="left" value="insert_drive_file" color="blue"/>
             <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
               <mu-menu-item value="play" title="播放" />
-              <mu-menu-item value="pause" title="暂停任务" />
+              <mu-menu-item v-show="task.downLoading" value="pause" title="暂停下载" />
+              <mu-menu-item v-show="!task.downLoading" value="resume" title="继续任务" />
               <mu-menu-item value="delete" title="删除任务" />
             </mu-icon-menu>
             <mu-linear-progress mode="determinate" v-bind:value="task.progress" color="#009688"/>
@@ -30,7 +31,7 @@
       </div>
       <div class="content-right">
         <transition name="fade">
-          <div v-if="showPlayer">
+          <div v-show="showPlayer">
             <mu-sub-header>{{ onPlayTitle }}</mu-sub-header>
             <video class="player" controls></video>
           </div>
@@ -39,9 +40,9 @@
     </div>
 
     <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
-      普通任务<br/>
+      <h3>普通任务</h3><br/>
       <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" fullWidth /><br/>
-      磁力任务<br/>
+      <h3>磁力任务</h3><br/>
       <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" fullWidth/><br/>
       <mu-flat-button @click="openBtFileSelectDialog" label="选择BT种子文件"/>
       <mu-flat-button slot="actions" @click="confirmNewTask" label="确定"/>
@@ -52,9 +53,7 @@
       <mu-text-field v-bind:fullWidth="true" v-model="newTaskReady.title"/>
       <h4>下载目录</h4>
       <mu-text-field v-bind:fullWidth="true" v-model="newTaskReady.destination"/><br/>
-      <mu-raised-button label="选择目录" labelPosition="after" @click="selectDesDir">
-        <i class="iconfont icon-folder mu-icon" style="color:#fdd835;"></i>
-      </mu-raised-button>
+      <mu-raised-button label="选择目录" @click="selectDesDir" icon="folder" />
       <mu-flat-button slot="actions" @click="startToDownloadBT" label="立即下载"/>
       <mu-flat-button slot="actions" @click="cancelDownloadTorrentReady" label="取消" secondary/>
     </mu-dialog>
@@ -85,7 +84,8 @@ export default {
           torrentId: 'https://rarbg.is/download.php?id=7p93ke2&f=BBC.Drugs.Map.of.Britain.Fentanyl.Deadlier.Than.Heroin.720p.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
           progress: 30,
           downLoading: true,
-          speed: '0 kb/s'
+          speed: '0 kb/s',
+          destination: ''
         },
         {
           name: '任务2',
@@ -94,7 +94,8 @@ export default {
           torrentId: 'https://rarbg.is/download.php?id=jkciz3b&f=The.End.of.Memory.1080.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
           progress: 60,
           downLoading: false,
-          speed: '0 kb/s'
+          speed: '0 kb/s',
+          destination: ''
         }
       ],
       onPlayTitle: '影片名',
@@ -113,36 +114,39 @@ export default {
     },
     takeAction (actionValue) {
       this.actionSelected = actionValue
-      this.onPlayTitle = 'Waiting...'
 
       if (this.actionSelected === 'play') {
-        if (this.onPlayTorrentId) {
-          const onPlayTorrent = this.$btClient.get(this.onPlayTorrentId)
-          onPlayTorrent.pause()
-        }
+        this.showPlayer = this.showPlayer || true
+        this.onPlayTitle = 'Waiting...'
+
         this.playVideoStreamInTorrent()
+      } else if (this.actionSelected === 'pause') {
+        this.pauseBtTask()
+      } else if (this.actionSelected === 'resume') {
+        this.resumeBtTask()
+      }
+    },
+    getSelectedTask () {
+      if (this.tasks[this.taskSelected].kind === 'BT') {
+        return this.$btClient.get(this.tasks[this.taskSelected].torrentId)
+      } else {
+        // TODO: return no-bt task
       }
     },
     playVideoStreamInTorrent () {
-      console.log(this.taskSelected, this.actionSelected)
-      this.showPlayer = this.showPlayer || true
-      // TODO: move out of add action
-      this.$btClient.add(this.tasks[this.taskSelected].torrentId, torrent => {
-        const file = torrent.files.find(file => {
-          return file.name.endsWith('.mp4')
-        })
-
-        this.onPlayTitle = file.name
-        this.onPlayTorrentId = torrent.magnetURI
-
-        const videoElement = document.getElementsByTagName('video')[0]
-        if (this.onPlayTorrentId !== '') {
-          videoElement.pause()
-          videoElement.src = ''
-          videoElement.load()
-        }
-        file.renderTo('.player')
+      const torrent = this.getSelectedTask()
+      const file = torrent.files.find(file => {
+        return file.name.endsWith('.mp4')
       })
+
+      if (file) {
+        this.onPlayTitle = file.name
+        this.onPlayTorrentId = torrent.infoHash
+
+        file.renderTo('.player')
+      } else {
+        console.log('Only support mp4 file')
+      }
     },
     toggleNewTaskDialog () {
       this.showAddNewTaskDialog = true
@@ -190,21 +194,52 @@ export default {
     confirmBtDownload () {
       this.showNewTaskConfigDialog = true
     },
+    addTorrentToClient (taskIndex, torrentId, destination) {
+      this.$btClient.add(torrentId, { path: destination }, torrent => {
+        torrent.on('download', bytes => {
+          this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
+          this.tasks[taskIndex].progress = torrent.progress * 100
+        })
+      })
+    },
     startToDownloadBT () {
       const { torrentId, destination, title } = this.newTaskReady
       if (!this.$btClient.get(torrentId)) {
+        const taskIndex = this.tasks.length
+        this.tasks.push({
+          name: title,
+          kind: 'BT',
+          torrentId: torrentId,
+          canStreamPlay: false,
+          progress: 0,
+          downLoading: true,
+          speed: '0 kb/s',
+          destination: destination
+        })
+        this.showNewTaskConfigDialog = false
         this.$btClient.add(torrentId, { path: destination }, torrent => {
-          this.tasks.push({
-            name: title,
-            kind: 'BT',
-            torrentId: torrentId,
-            canStreamPlay: false,
-            progress: 0,
-            downLoading: true,
-            speed: '0 kb/s'
+          torrent.on('download', bytes => {
+            this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
+            this.tasks[taskIndex].progress = torrent.progress * 100
           })
         })
       }
+    },
+    pauseBtTask () {
+      const torrent = this.getSelectedTask()
+      torrent.destroy(err => {
+        if (err) throw err
+        this.tasks[this.taskSelected].downLoading = false
+        this.tasks[this.taskSelected].speed = '0 kb/s'
+      })
+    },
+    resumeBtTask () {
+      const taskIndex = this.taskSelected
+      const { torrentId, destination } = this.tasks[taskIndex]
+      console.log(taskIndex, torrentId, destination)
+      this.tasks[taskIndex].downLoading = true
+
+      this.addTorrentToClient(torrentId, torrentId, destination)
     },
     cancelDownloadTorrentReady () {
       console.log('user do not want to download this')
@@ -215,7 +250,7 @@ export default {
       const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
       num = Number((num / Math.pow(1000, exponent)).toFixed(2))
       const unit = units[exponent]
-      return num + ' ' + unit
+      return num + ' ' + unit + '/s'
     }
   }
 }
