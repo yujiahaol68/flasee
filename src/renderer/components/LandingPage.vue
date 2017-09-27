@@ -53,7 +53,9 @@
       <mu-text-field v-bind:fullWidth="true" v-model="newTaskReady.title"/>
       <h4>下载目录</h4>
       <mu-text-field v-bind:fullWidth="true" v-model="newTaskReady.destination"/><br/>
-      <mu-raised-button label="选择目录" @click="selectDesDir" icon="folder" />
+      <mu-raised-button label="选择目录" labelPosition="after" @click="selectDesDir">
+        <i class="iconfont icon-folder mu-icon" style="color:#fdd835;"></i>
+      </mu-raised-button>
       <mu-flat-button slot="actions" @click="startToDownloadBT" label="立即下载"/>
       <mu-flat-button slot="actions" @click="cancelDownloadTorrentReady" label="取消" secondary/>
     </mu-dialog>
@@ -205,7 +207,9 @@ export default {
     startToDownloadBT () {
       const { torrentId, destination, title } = this.newTaskReady
       if (!this.$btClient.get(torrentId)) {
+        this.showNewTaskConfigDialog = false
         const taskIndex = this.tasks.length
+
         this.tasks.push({
           name: title,
           kind: 'BT',
@@ -216,13 +220,8 @@ export default {
           speed: '0 kb/s',
           destination: destination
         })
-        this.showNewTaskConfigDialog = false
-        this.$btClient.add(torrentId, { path: destination }, torrent => {
-          torrent.on('download', bytes => {
-            this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
-            this.tasks[taskIndex].progress = torrent.progress * 100
-          })
-        })
+
+        this.addTorrentToClient(taskIndex, torrentId, destination)
       }
     },
     pauseBtTask () {
@@ -277,6 +276,8 @@ export default {
 
 .layout{
   background-color: rgb(236, 236, 236);
+  height: 100vh;
+  width: 100vw;
 }
 
 .header{
@@ -302,10 +303,12 @@ export default {
 
 .content-left{
   width: 30%;
+  height: 100vh;
   float: left;
   background-color: white;
   margin-bottom: 0px;
   padding-bottom: 0px;
+  word-wrap: break-word;
 }
 
 .content-right{
