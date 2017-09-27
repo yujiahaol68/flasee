@@ -100,6 +100,7 @@ export default {
           destination: ''
         }
       ],
+      completedTasks: [],
       onPlayTitle: '影片名',
       onPlayTorrentId: '',
       showPlayer: false,
@@ -201,6 +202,21 @@ export default {
         torrent.on('download', bytes => {
           this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
           this.tasks[taskIndex].progress = torrent.progress * 100
+        })
+
+        torrent.on('done', () => {
+          // TODO: design new completed task data structure or use one task array
+          const completedTask = this.tasks[taskIndex]
+          const { name, kind, destination } = completedTask
+
+          this.completedTasks.push({
+            name,
+            kind,
+            destination
+          })
+
+          /* eslint-disable-line no-new */
+          // new Notification('任务完成', { body: name + ' 下载成功' })
         })
       })
     },
