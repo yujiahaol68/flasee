@@ -118,15 +118,22 @@ export default {
     takeAction (actionValue) {
       this.actionSelected = actionValue
 
-      if (this.actionSelected === 'play') {
-        this.showPlayer = this.showPlayer || true
-        this.onPlayTitle = 'Waiting...'
+      switch (this.actionSelected) {
+        case 'play':
+          this.showPlayer = this.showPlayer || true
+          this.onPlayTitle = 'Waiting...'
 
-        this.playVideoStreamInTorrent()
-      } else if (this.actionSelected === 'pause') {
-        this.pauseBtTask()
-      } else if (this.actionSelected === 'resume') {
-        this.resumeBtTask()
+          this.playVideoStreamInTorrent()
+          break
+        case 'pause':
+          this.pauseBtTask()
+          break
+        case 'resume':
+          this.resumeBtTask()
+          break
+        case 'delete':
+          this.deleteTaskUnFinished()
+          break
       }
     },
     getSelectedTask () {
@@ -255,6 +262,23 @@ export default {
       this.tasks[taskIndex].downLoading = true
 
       this.addTorrentToClient(torrentId, torrentId, destination)
+    },
+    deleteTaskUnFinished () {
+      const taskIndex = this.taskSelected
+      const { destination, name } = this.tasks[taskIndex]
+      const absPath = `${destination}/${name}`
+
+      if (fs.existsSync(absPath)) {
+        if (fs.lstatSync().isDirectory()) {
+          // TODO: delete all files in dir
+        } else {
+          fs.unlink(absPath, err => {
+            if (err) throw err
+          })
+        }
+      } else {
+        console.log('Task has been deleted!')
+      }
     },
     cancelDownloadTorrentReady () {
       console.log('user do not want to download this')
