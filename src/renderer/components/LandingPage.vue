@@ -64,6 +64,7 @@
 
 <script>
 import fs from 'fs'
+import rimraf from 'rimraf'
 import btParser from 'parse-torrent'
 
 export default {
@@ -266,11 +267,13 @@ export default {
     deleteTaskUnFinished () {
       const taskIndex = this.taskSelected
       const { destination, name } = this.tasks[taskIndex]
-      const absPath = `${destination}/${name}`
+      const absPath = destination + '/' + name
 
       if (fs.existsSync(absPath)) {
-        if (fs.lstatSync().isDirectory()) {
-          // TODO: delete all files in dir
+        if (fs.lstatSync(absPath).isDirectory()) {
+          rimraf(absPath, err => {
+            if (err) throw err
+          })
         } else {
           fs.unlink(absPath, err => {
             if (err) throw err
@@ -279,6 +282,11 @@ export default {
       } else {
         console.log('Task has been deleted!')
       }
+
+      this.removeFromTasks(taskIndex)
+    },
+    removeFromTasks (index) {
+      return this.tasks.splice(index, 1)
     },
     cancelDownloadTorrentReady () {
       console.log('user do not want to download this')
