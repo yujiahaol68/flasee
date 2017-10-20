@@ -41,9 +41,9 @@
 
     <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
       <h3>普通任务</h3><br/>
-      <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" fullWidth /><br/>
+      <mu-text-field v-model="normalNewTaskUrl" hintText="链接地址" @focus="btNewTaskUrl=''" fullWidth /><br/>
       <h3>磁力任务</h3><br/>
-      <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" fullWidth/><br/>
+      <mu-text-field v-model="btNewTaskUrl" hintText="magnet:" @focus="normalNewTaskUrl=''" fullWidth/><br/>
       <mu-flat-button @click="openBtFileSelectDialog" label="选择BT种子文件"/>
       <mu-flat-button slot="actions" @click="confirmNewTask" label="确定"/>
       <mu-flat-button slot="actions" @click="closeNewTaskDialog" label="取消" secondary/>
@@ -308,7 +308,7 @@ export default {
     },
     analysisUri () {
       // TODO: Normal task uri
-      if (this.btNewTaskUrl.substr(0, 7) === 'magnet:') {
+      if (this.btNewTaskUrl && this.btNewTaskUrl.substr(0, 7) === 'magnet:') {
         return {
           kind: 'BT',
           meta: btParser(this.btNewTaskUrl)
