@@ -59,6 +59,7 @@
       <mu-flat-button slot="actions" @click="startToDownloadBT" label="立即下载"/>
       <mu-flat-button slot="actions" @click="cancelDownloadTorrentReady" label="取消" secondary/>
     </mu-dialog>
+    <mu-toast v-if="toastShowed" :message="toastMsg" @close="hideToast"/>
   </div>
 </template>
 
@@ -109,7 +110,9 @@ export default {
       showAddNewTaskDialog: false,
       showNewTaskConfigDialog: false,
       normalNewTaskUrl: '',
-      btNewTaskUrl: ''
+      btNewTaskUrl: '',
+      toastShowed: false,
+      toastMsg: ''
     }
   },
   methods: {
@@ -172,6 +175,8 @@ export default {
       if (newTask.kind === 'BT') {
         this.newTaskReady.torrentId = newTask.meta.infoHash
         this.newTaskReady.title = newTask.meta.name
+        this.btNewTaskUrl = ''
+
         this.confirmBtDownload()
       }
     },
@@ -193,11 +198,13 @@ export default {
           {name: 'BT种子文件', extensions: ['torrent']}
         ]
       }, btFilesPath => {
-        if (btFilesPath) {
+        if (btFilesPath && fs.existsSync(btFilesPath)) {
           console.log(btFilesPath)
           this.showAddNewTaskDialog = false
           const fileData = fs.readFileSync(btFilesPath[0])
           this.getTorrentFileMeta(btParser(fileData))
+        } else {
+          this.showToast('无效下载路径，请重试')
         }
       })
     },
@@ -214,6 +221,8 @@ export default {
     },
     addTorrentToClient (taskIndex, torrentId, destination) {
       this.$btClient.add(torrentId, { path: destination }, torrent => {
+        if (torrent) this.showToast('任务开始下载')
+
         torrent.on('download', bytes => {
           this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
           this.tasks[taskIndex].progress = torrent.progress * 100
@@ -280,14 +289,16 @@ export default {
         if (fs.lstatSync(absPath).isDirectory()) {
           rimraf(absPath, err => {
             if (err) throw err
+            this.showToast('任务已删除')
           })
         } else {
           fs.unlink(absPath, err => {
             if (err) throw err
+            this.showToast('任务已删除')
           })
         }
       } else {
-        console.log('Task has been deleted!')
+        this.showToast('任务已删除')
       }
 
       this.removeFromTasks(taskIndex)
@@ -320,6 +331,19 @@ export default {
       this.newTaskReady.destination = ''
       this.newTaskReady.files = []
       this.newTaskReady.torrentId = ''
+    },
+    showToast (msg) {
+      this.toastMsg = msg
+      this.toastShowed = true
+      if (this.toastTimer) clearTimeout(this.toastTimer)
+      this.toastTimer = setTimeout(() => {
+        this.toastShowed = false
+        this.toastMsg = ''
+      }, 2000)
+    },
+    hideToast () {
+      this.toastShowed = false
+      if (this.toastTimer) clearTimeout(this.toastTimer)
     }
   }
 }
