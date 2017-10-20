@@ -198,13 +198,11 @@ export default {
           {name: 'BT种子文件', extensions: ['torrent']}
         ]
       }, btFilesPath => {
-        if (btFilesPath && fs.existsSync(btFilesPath)) {
+        if (btFilesPath) {
           console.log(btFilesPath)
           this.showAddNewTaskDialog = false
           const fileData = fs.readFileSync(btFilesPath[0])
           this.getTorrentFileMeta(btParser(fileData))
-        } else {
-          this.showToast('无效下载路径，请重试')
         }
       })
     },
@@ -245,6 +243,9 @@ export default {
     },
     startToDownloadBT () {
       const { torrentId, destination, title } = this.newTaskReady
+
+      if (!fs.existsSync(destination)) return this.showToast('无效下载路径')
+
       if (!this.$btClient.get(torrentId)) {
         this.showNewTaskConfigDialog = false
         const taskIndex = this.tasks.length
