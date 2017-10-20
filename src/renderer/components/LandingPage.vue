@@ -167,6 +167,13 @@ export default {
     },
     confirmNewTask () {
       this.showAddNewTaskDialog = false
+      const newTask = this.analysisUri()
+
+      if (newTask.kind === 'BT') {
+        this.newTaskReady.torrentId = newTask.meta.infoHash
+        this.newTaskReady.title = newTask.meta.name
+        this.confirmBtDownload()
+      }
     },
     selectDesDir () {
       this.$electron.remote.dialog.showOpenDialog({
@@ -213,8 +220,7 @@ export default {
         })
 
         torrent.on('done', () => {
-          // TODO: design new completed task data structure or use one task array
-          const completedTask = this.tasks[taskIndex]
+          const completedTask = this.tasks.splice(taskIndex, 1)
           const { name, kind, destination } = completedTask
 
           this.completedTasks.push({
@@ -223,8 +229,8 @@ export default {
             destination
           })
 
-          /* eslint-disable-line no-new */
-          // new Notification('任务完成', { body: name + ' 下载成功' })
+          const doneNotification = new Notification('任务完成', { body: name + ' 下载成功' })
+          setTimeout(() => doneNotification.close(), 5000)
         })
       })
     },
@@ -246,6 +252,7 @@ export default {
         })
 
         this.addTorrentToClient(taskIndex, torrentId, destination)
+        this.clearNewBtTask()
       }
     },
     pauseBtTask () {
@@ -298,6 +305,21 @@ export default {
       num = Number((num / Math.pow(1000, exponent)).toFixed(2))
       const unit = units[exponent]
       return num + ' ' + unit + '/s'
+    },
+    analysisUri () {
+      // TODO: Normal task uri
+      if (this.btNewTaskUrl.substr(0, 7) === 'magnet:') {
+        return {
+          kind: 'BT',
+          meta: btParser(this.btNewTaskUrl)
+        }
+      }
+    },
+    clearNewBtTask () {
+      this.newTaskReady.title = ''
+      this.newTaskReady.destination = ''
+      this.newTaskReady.files = []
+      this.newTaskReady.torrentId = ''
     }
   }
 }
