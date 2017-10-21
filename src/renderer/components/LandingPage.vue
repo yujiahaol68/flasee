@@ -18,7 +18,8 @@
         <mu-list @change="handleListChange" :value="taskSelected">
           <mu-sub-header>进行中的任务</mu-sub-header>
           <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" v-bind:describeText="task.speed">
-            <mu-icon slot="left" value="insert_drive_file" color="blue"/>
+            <mu-icon v-show="!task.downLoading" slot="left" value="insert_drive_file" color="blue"/>
+            <h5 v-show="task.downLoading" slot="left">{{ task.progress | progressPercentage }}</h5>
             <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
               <mu-menu-item value="play" title="播放" />
               <mu-menu-item v-show="task.downLoading" value="pause" title="暂停下载" />
@@ -86,7 +87,7 @@ export default {
           kind: 'BT',
           canStreamPlay: true,
           torrentId: 'https://rarbg.is/download.php?id=7p93ke2&f=BBC.Drugs.Map.of.Britain.Fentanyl.Deadlier.Than.Heroin.720p.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
-          progress: 30,
+          progress: 30.3,
           downLoading: true,
           speed: '0 kb/s',
           destination: ''
@@ -96,7 +97,7 @@ export default {
           kind: 'BT',
           canStreamPlay: true,
           torrentId: 'https://rarbg.is/download.php?id=jkciz3b&f=The.End.of.Memory.1080.HDTV.x264.AAC.MVGroup.org.mp4-[rarbg.to].torrent',
-          progress: 60,
+          progress: 60.5,
           downLoading: false,
           speed: '0 kb/s',
           destination: ''
@@ -113,6 +114,11 @@ export default {
       btNewTaskUrl: '',
       toastShowed: false,
       toastMsg: ''
+    }
+  },
+  filters: {
+    progressPercentage: function (val) {
+      return val + ' %'
     }
   },
   methods: {
@@ -223,7 +229,7 @@ export default {
 
         torrent.on('download', bytes => {
           this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
-          this.tasks[taskIndex].progress = torrent.progress * 100
+          this.tasks[taskIndex].progress = (torrent.progress * 100).toFixed(1)
         })
 
         torrent.on('done', () => {
