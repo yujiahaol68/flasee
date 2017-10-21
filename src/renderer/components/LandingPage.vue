@@ -224,16 +224,30 @@ export default {
       this.showNewTaskConfigDialog = true
     },
     addTorrentToClient (taskIndex, torrentId, destination) {
+      this.$store.state.ProcessingTask.set(torrentId, taskIndex)
+
       this.$btClient.add(torrentId, { path: destination }, torrent => {
         if (torrent) this.showToast('任务开始下载')
 
         torrent.on('download', bytes => {
-          this.tasks[taskIndex].speed = this.prettyBytes(torrent.downloadSpeed)
-          this.tasks[taskIndex].progress = (torrent.progress * 100).toFixed(1)
+          const taskPosition = this.$store.getters.getTaskIndexByHash(torrentId)
+
+          if (this.tasks[taskPosition] && this.tasks[taskPosition].downLoading) {
+            this.tasks[taskPosition].speed = this.prettyBytes(torrent.downloadSpeed)
+            this.tasks[taskPosition].progress = +(torrent.progress * 100).toFixed(1)
+          }
         })
 
         torrent.on('done', () => {
-          const completedTask = this.tasks.splice(taskIndex, 1)
+          const removedTaskIndex = this.$store.getters.getTaskIndexByHash(torrentId)
+          this.$store.dispatch('removedFromProcessing', {
+            infoHash: torrentId,
+            position: removedTaskIndex
+          })
+
+          this.tasks[removedTaskIndex].downLoading = false
+
+          const completedTask = this.tasks.splice(removedTaskIndex, 1)
           const { name, kind, destination } = completedTask
 
           this.completedTasks.push({
@@ -242,8 +256,7 @@ export default {
             destination
           })
 
-          const doneNotification = new Notification('任务完成', { body: name + ' 下载成功' })
-          setTimeout(() => doneNotification.close(), 5000)
+          // TODO: A better native notification
         })
       })
     },
@@ -273,6 +286,8 @@ export default {
     },
     pauseBtTask () {
       const torrent = this.getSelectedTask()
+      this.$store.dispatch('taskPause', torrent.infoHash)
+
       torrent.destroy(err => {
         if (err) throw err
         this.tasks[this.taskSelected].downLoading = false
@@ -285,11 +300,20 @@ export default {
       console.log(taskIndex, torrentId, destination)
       this.tasks[taskIndex].downLoading = true
 
-      this.addTorrentToClient(torrentId, torrentId, destination)
+      this.addTorrentToClient(taskIndex, torrentId, destination)
     },
     deleteTaskUnFinished () {
       const taskIndex = this.taskSelected
-      const { destination, name } = this.tasks[taskIndex]
+      const { destination, name, downLoading, torrentId } = this.tasks[taskIndex]
+
+      if (downLoading) {
+        this.$btClient.remove(torrentId)
+        this.$store.dispatch('removedFromProcessing', {
+          infoHash: torrentId,
+          position: taskIndex
+        })
+      }
+
       const absPath = destination + '/' + name
 
       if (fs.existsSync(absPath)) {
@@ -314,7 +338,7 @@ export default {
       return this.tasks.splice(index, 1)
     },
     cancelDownloadTorrentReady () {
-      console.log('user do not want to download this')
+      this.showToast('任务取消')
     },
     prettyBytes (num) {
       const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
