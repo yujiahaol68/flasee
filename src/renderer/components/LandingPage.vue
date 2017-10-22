@@ -2,7 +2,7 @@
   <div class="layout">
     <div class="header">
       <div class="logo">
-        flasee Downloader
+        Flasee Downloader
       </div>
     </div>
     <div v-if="inProgress">
@@ -70,7 +70,6 @@ import rimraf from 'rimraf'
 import btParser from 'parse-torrent'
 
 export default {
-  name: 'landing-page',
   data () {
     return {
       actionSelected: null,
@@ -124,17 +123,7 @@ export default {
   created: function () {
     this.$db.task.find({}, (err, docs) => {
       if (err) throw err
-      if (docs.length === 0) {
-        this.tasks = []
-        return
-      } else {
-        this.tasks = docs
-      }
-
-      this.$db.task.remove({}, { multi: true }, (err, numRemoved) => {
-        if (err) throw err
-        console.log(`Removed ${numRemoved} tasks`)
-      })
+      this.tasks = docs
     })
   },
   methods: {
@@ -394,10 +383,14 @@ export default {
     }
   },
   beforeDestroy: function () {
+    // TODO: data for main process to store
+    // FIXME: task persist doesn't work when window close
     this.$btClient.destroy()
     this.tasks.forEach(task => {
       task.downLoading = false
-      this.$db.task.insert(task)
+      this.$db.task.insert(task, (err, doc) => {
+        if (err) throw err
+      })
     })
   }
 }
