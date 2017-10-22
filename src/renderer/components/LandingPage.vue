@@ -121,6 +121,22 @@ export default {
       return val + ' %'
     }
   },
+  created: function () {
+    this.$db.task.find({}, (err, docs) => {
+      if (err) throw err
+      if (docs.length === 0) {
+        this.tasks = []
+        return
+      } else {
+        this.tasks = docs
+      }
+
+      this.$db.task.remove({}, { multi: true }, (err, numRemoved) => {
+        if (err) throw err
+        console.log(`Removed ${numRemoved} tasks`)
+      })
+    })
+  },
   methods: {
     handleListChange (val) {
       this.taskSelected = val
@@ -376,6 +392,13 @@ export default {
       this.toastShowed = false
       if (this.toastTimer) clearTimeout(this.toastTimer)
     }
+  },
+  beforeDestroy: function () {
+    this.$btClient.destroy()
+    this.tasks.forEach(task => {
+      task.downLoading = false
+      this.$db.task.insert(task)
+    })
   }
 }
 </script>
