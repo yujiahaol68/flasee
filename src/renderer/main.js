@@ -6,6 +6,11 @@ import App from './App'
 import router from './router'
 import store from './store'
 
+import {
+  task,
+  setting
+} from './datastore'
+
 // dev
 import MuseUI from 'muse-ui'
 import 'muse-ui/dist/muse-ui.css'
@@ -17,6 +22,11 @@ Vue.config.productionTip = false
 
 const client = new WebTorrent()
 Object.defineProperty(Vue.prototype, '$btClient', { value: client })
+
+Vue.prototype.$db = {
+  task,
+  setting
+}
 
 /* eslint-disable no-new */
 new Vue({
