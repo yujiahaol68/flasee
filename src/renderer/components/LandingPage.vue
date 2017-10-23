@@ -17,7 +17,7 @@
         <mu-divider/>
         <mu-list @change="handleListChange" :value="taskSelected">
           <mu-sub-header>进行中的任务</mu-sub-header>
-          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name" v-bind:value="index" v-bind:describeText="task.speed">
+          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name | formatTaskName" v-bind:value="index" v-bind:describeText="task.speed">
             <mu-icon v-show="!task.downLoading" slot="left" value="insert_drive_file" color="blue"/>
             <h5 v-show="task.downLoading" slot="left">{{ task.progress | progressPercentage }}</h5>
             <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
@@ -118,13 +118,17 @@ export default {
   filters: {
     progressPercentage: function (val) {
       return val + ' %'
+    },
+    formatTaskName: function (name) {
+      if (name.length > 45) {
+        return name.slice(0, 45) + '...'
+      }
+      return name
     }
   },
   created: function () {
-    this.$db.task.find({}, (err, docs) => {
-      if (err) throw err
-      this.tasks = docs
-    })
+    // FIXME: task storage issue
+    this.tasks = []
   },
   methods: {
     handleListChange (val) {
@@ -381,17 +385,6 @@ export default {
       this.toastShowed = false
       if (this.toastTimer) clearTimeout(this.toastTimer)
     }
-  },
-  beforeDestroy: function () {
-    // TODO: data for main process to store
-    // FIXME: task persist doesn't work when window close
-    this.$btClient.destroy()
-    this.tasks.forEach(task => {
-      task.downLoading = false
-      this.$db.task.insert(task, (err, doc) => {
-        if (err) throw err
-      })
-    })
   }
 }
 </script>
