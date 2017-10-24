@@ -7,8 +7,13 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'landing-page',
-      component: require('@/components/LandingPage').default
+      name: 'task-process-page',
+      component: require('@/pages/TaskProcessPage').default
+    },
+    {
+      path: '/done',
+      name: 'processing-task',
+      component: require('@/components/ProcessingTask').default
     },
     {
       path: '*',

@@ -1,22 +1,12 @@
 <template>
-  <div class="layout">
-    <div class="header">
-      <div class="logo">
-        Flasee Downloader
-      </div>
-    </div>
-    <div v-if="inProgress">
-      <mu-linear-progress color="blue"/>
-    </div>
-    <div class="content">
-      <div class="content-left">
+  <div>
+      <section>
         <div class="container">
           <mu-flat-button icon="add" color="#37474f" class="flat-button" @click="toggleNewTaskDialog"/>
           <mu-flat-button icon="history" color="#78909c" class="flat-button"/>
         </div>
         <mu-divider/>
         <mu-list @change="handleListChange" :value="taskSelected">
-          <mu-sub-header>进行中的任务</mu-sub-header>
           <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name | formatTaskName" v-bind:value="index" v-bind:describeText="task.speed">
             <mu-icon v-show="!task.downLoading" slot="left" value="insert_drive_file" color="blue"/>
             <h5 v-show="task.downLoading" slot="left">{{ task.progress | progressPercentage }}</h5>
@@ -29,16 +19,16 @@
             <mu-linear-progress mode="determinate" v-bind:value="task.progress" color="#009688"/>
           </mu-list-item>
         </mu-list>
-      </div>
-      <div class="content-right">
+      </section>
+
+      <section>
         <transition name="fade">
           <div v-show="showPlayer">
             <mu-sub-header>{{ onPlayTitle }}</mu-sub-header>
             <video class="player" controls></video>
           </div>
         </transition>
-      </div>
-    </div>
+      </section>
 
     <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
       <h3>普通任务</h3><br/>
@@ -106,7 +96,6 @@ export default {
       onPlayTitle: '影片名',
       onPlayTorrentId: '',
       showPlayer: false,
-      inProgress: false,
       showAddNewTaskDialog: false,
       showNewTaskConfigDialog: false,
       normalNewTaskUrl: '',
@@ -390,10 +379,13 @@ export default {
 </script>
 
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+
+.flat-button {
+  margin: 1px;
+}
+
+.container{
+  display: flex;
 }
 
 #wrapper {
@@ -408,49 +400,10 @@ export default {
   width: 100vw;
 }
 
-.layout{
-  background-color: rgb(236, 236, 236);
-  height: 100vh;
-  width: 100vw;
-}
-
-.header{
-  background-color: #26a69a;
-}
-
-.logo{
-  font-size: 24px;
-  color: white;
-  display: inline-block;
-  padding: 10px 20px;
-}
-
 .nav{
   display: inline-block;
   width: calc(100% - 150px);
   margin: 0 auto;
-}
-
-.content{
-  overflow: hidden;
-}
-
-.content-left{
-  width: 30%;
-  height: 100vh;
-  float: left;
-  background-color: white;
-  margin-bottom: 0px;
-  padding-bottom: 0px;
-  word-wrap: break-word;
-}
-
-.content-right{
-  width: 70%;
-  display: inline-block;
-  float: right;
-  padding: 10px 5px;
-  background-color: rgba(0, 0, 0, 0)
 }
 
 .player {
@@ -464,13 +417,5 @@ export default {
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active in below version 2.1.8 */ {
   opacity: 0
-}
-
-.container{
-  display: flex;
-}
-
-.flat-button {
-  margin: 1px;
 }
 </style>
