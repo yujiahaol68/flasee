@@ -23,6 +23,10 @@ Vue.config.productionTip = false
 const client = new WebTorrent()
 Object.defineProperty(Vue.prototype, '$btClient', { value: client })
 
+client.on('error', err => {
+  if (err) console.log(err)
+})
+
 Vue.prototype.$db = {
   task,
   setting

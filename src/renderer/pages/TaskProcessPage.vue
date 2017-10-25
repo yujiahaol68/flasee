@@ -115,10 +115,6 @@ export default {
       return name
     }
   },
-  created: function () {
-    // FIXME: task storage issue
-    this.tasks = []
-  },
   methods: {
     handleListChange (val) {
       this.taskSelected = val
