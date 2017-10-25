@@ -332,6 +332,7 @@ export default {
       return this.tasks.splice(index, 1)
     },
     cancelDownloadTorrentReady () {
+      this.showNewTaskConfigDialog = false
       this.showToast('任务取消')
     },
     prettyBytes (num) {
