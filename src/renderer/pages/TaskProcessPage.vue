@@ -173,7 +173,8 @@ export default {
       const newTask = this.analysisUri()
 
       if (newTask.kind === 'BT') {
-        this.newTaskReady.torrentId = newTask.meta.infoHash
+        console.log(this.btNewTaskUrl)
+        this.newTaskReady.torrentId = btParser(this.btNewTaskUrl)
         this.newTaskReady.title = newTask.meta.name
         this.btNewTaskUrl = ''
 
@@ -208,7 +209,7 @@ export default {
     },
     getTorrentFileMeta (torrentInfo) {
       console.log(torrentInfo)
-      this.newTaskReady.torrentId = torrentInfo.infoHash
+      this.newTaskReady.torrentId = torrentInfo
       this.newTaskReady.title = torrentInfo.name
       this.newTaskReady.files = torrentInfo.files
       this.showAddNewTaskDialog = false
@@ -218,13 +219,13 @@ export default {
       this.showNewTaskConfigDialog = true
     },
     addTorrentToClient (taskIndex, torrentId, destination) {
-      this.$store.state.ProcessingTask.set(torrentId, taskIndex)
+      this.$store.state.ProcessingTask.set(torrentId.infoHash, taskIndex)
 
       this.$btClient.add(torrentId, { path: destination }, torrent => {
         if (torrent) this.showToast('任务开始下载')
 
         torrent.on('download', bytes => {
-          const taskPosition = this.$store.getters.getTaskIndexByHash(torrentId)
+          const taskPosition = this.$store.getters.getTaskIndexByHash(torrentId.infoHash)
 
           if (this.tasks[taskPosition] && this.tasks[taskPosition].downLoading) {
             this.tasks[taskPosition].speed = this.prettyBytes(torrent.downloadSpeed)
@@ -233,9 +234,9 @@ export default {
         })
 
         torrent.on('done', () => {
-          const removedTaskIndex = this.$store.getters.getTaskIndexByHash(torrentId)
+          const removedTaskIndex = this.$store.getters.getTaskIndexByHash(torrentId.infoHash)
           this.$store.dispatch('removedFromProcessing', {
-            infoHash: torrentId,
+            infoHash: torrentId.infoHash,
             position: removedTaskIndex
           })
 
@@ -291,7 +292,7 @@ export default {
     resumeBtTask () {
       const taskIndex = this.taskSelected
       const { torrentId, destination } = this.tasks[taskIndex]
-      console.log(taskIndex, torrentId, destination)
+      console.log(taskIndex, torrentId.infoHash, destination)
       this.tasks[taskIndex].downLoading = true
 
       this.addTorrentToClient(taskIndex, torrentId, destination)
@@ -303,7 +304,7 @@ export default {
       if (downLoading) {
         this.$btClient.remove(torrentId)
         this.$store.dispatch('removedFromProcessing', {
-          infoHash: torrentId,
+          infoHash: torrentId.infoHash,
           position: taskIndex
         })
       }

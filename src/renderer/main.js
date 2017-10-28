@@ -32,6 +32,8 @@ Vue.prototype.$db = {
   setting
 }
 
+process.setMaxListeners(80)
+
 /* eslint-disable no-new */
 new Vue({
   components: { App },
