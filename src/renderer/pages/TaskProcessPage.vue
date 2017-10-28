@@ -1,30 +1,25 @@
 <template>
   <div>
-      <section>
-        <div class="container">
-          <mu-flat-button icon="add" color="#37474f" class="flat-button" @click="toggleNewTaskDialog"/>
-          <mu-flat-button icon="history" color="#78909c" class="flat-button"/>
-        </div>
-        <mu-divider/>
-        <mu-list @change="handleListChange" :value="taskSelected">
-          <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name | formatTaskName" v-bind:value="index" v-bind:describeText="task.speed">
-            <mu-icon v-show="!task.downLoading" slot="left" value="insert_drive_file" color="blue"/>
-            <h5 v-show="task.downLoading" slot="left">{{ task.progress | progressPercentage }}</h5>
-            <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
-              <mu-menu-item value="play" title="播放" />
-              <mu-menu-item v-show="task.downLoading" value="pause" title="暂停下载" />
-              <mu-menu-item v-show="!task.downLoading" value="resume" title="继续任务" />
-              <mu-menu-item value="delete" title="删除任务" />
-            </mu-icon-menu>
-            <mu-linear-progress mode="determinate" v-bind:value="task.progress" color="#009688"/>
-          </mu-list-item>
-        </mu-list>
-      </section>
-
-    <div v-show="showPlayer">
-      <mu-sub-header>{{ onPlayTitle }}</mu-sub-header>
-      <video class="player" controls></video>
-    </div>
+    <section>
+      <div class="container">
+        <mu-flat-button icon="add" color="#37474f" class="flat-button" @click="toggleNewTaskDialog"/>
+        <mu-flat-button icon="history" color="#78909c" class="flat-button"/>
+      </div>
+      <mu-divider/>
+      <mu-list @change="handleListChange" :value="taskSelected">
+        <mu-list-item v-for="(task, index) in tasks" v-bind:key="index" v-bind:title="task.name | formatTaskName" v-bind:value="index" v-bind:describeText="task.speed">
+          <mu-icon v-show="!task.downLoading" slot="left" value="insert_drive_file" color="blue"/>
+          <h5 v-show="task.downLoading" slot="left">{{ task.progress | progressPercentage }}</h5>
+          <mu-icon-menu slot="right" icon="more_vert" tooltip="操作" :value="actionSelected" @change="takeAction" v-bind:desktop="true">
+            <mu-menu-item value="play" title="播放" />
+            <mu-menu-item v-show="task.downLoading" value="pause" title="暂停下载" />
+            <mu-menu-item v-show="!task.downLoading" value="resume" title="继续任务" />
+            <mu-menu-item value="delete" title="删除任务" />
+          </mu-icon-menu>
+          <mu-linear-progress mode="determinate" v-bind:value="task.progress" color="#009688"/>
+        </mu-list-item>
+      </mu-list>
+    </section>
 
     <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
       <h3>普通任务</h3><br/>
@@ -89,9 +84,7 @@ export default {
         }
       ],
       completedTasks: [],
-      onPlayTitle: '影片名',
       onPlayTorrentId: '',
-      showPlayer: false,
       showAddNewTaskDialog: false,
       showNewTaskConfigDialog: false,
       normalNewTaskUrl: '',
@@ -153,7 +146,9 @@ export default {
         this.onPlayTitle = file.name
         this.onPlayTorrentId = torrent.infoHash
 
-        file.renderTo('.player')
+        this.$store.commit('ADD_STREAM_TARGET', { title: file.name, videoFile: file })
+
+        this.$router.push({path: '/stream_play', name: 'stream-player', params: { videoFile: file }})
       } else {
         console.log('Only support mp4 file')
       }
@@ -398,11 +393,5 @@ export default {
   display: inline-block;
   width: calc(100% - 150px);
   margin: 0 auto;
-}
-
-.player {
-  max-width: 100%;
-  height: auto;
-  padding: 0%;
 }
 </style>

@@ -4,9 +4,8 @@ const state = {
 }
 
 const mutations = {
-  ADD_STREAM_TARGET (state, { title, videoFile }) {
-    state.title = title
-    state.videoFile = videoFile
+  ADD_STREAM_TARGET (state, newVideo) {
+    state = Object.assign({}, newVideo)
   }
 }
 
@@ -17,12 +16,8 @@ const actions = {
 }
 
 const getters = {
-  videoTitle: (state, getters) => {
-    return state.title
-  },
-  videoFile: (state, getters) => {
-    return state.videoFile
-  }
+  videoTitle: state => state.title,
+  videoFile: state => state.videoFile
 }
 
 export default {

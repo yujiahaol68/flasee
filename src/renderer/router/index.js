@@ -18,7 +18,8 @@ export default new Router({
     {
       path: '/stream_play',
       name: 'stream-player',
-      component: require('@/components/StreamPlayer').default
+      component: require('@/components/StreamPlayer').default,
+      props: true
     },
     {
       path: '*',
