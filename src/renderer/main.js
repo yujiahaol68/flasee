@@ -14,6 +14,9 @@ import {
 // dev
 import MuseUI from 'muse-ui'
 import 'muse-ui/dist/muse-ui.css'
+
+require('events').EventEmitter.prototype._maxListeners = 100
+
 Vue.use(MuseUI)
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
@@ -31,8 +34,6 @@ Vue.prototype.$db = {
   task,
   setting
 }
-
-process.setMaxListeners(80)
 
 /* eslint-disable no-new */
 new Vue({

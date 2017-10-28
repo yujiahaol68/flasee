@@ -16,12 +16,17 @@
               <mu-list-item title="已完成" to="/done">
                 <mu-icon slot="left" value="done"/>
               </mu-list-item>
+              <mu-list-item title="边下边播" to="/stream_play">
+                <mu-icon slot="left" value="movie"/>
+              </mu-list-item>
             </mu-list>
           </div>
         </div>
         <div class="content-right">
           <keep-alive>
-            <router-view></router-view>
+            <transition name="fade">
+              <router-view></router-view>
+            </transition>
           </keep-alive>
         </div>
       </div>
@@ -82,5 +87,13 @@
   width: 80%;
   display: inline-block;
   background-color: rgba(0, 0, 0, 0)
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .2s
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0
 }
 </style>

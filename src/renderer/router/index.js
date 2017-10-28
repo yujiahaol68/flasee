@@ -16,6 +16,11 @@ export default new Router({
       component: require('@/components/ProcessingTask').default
     },
     {
+      path: '/stream_play',
+      name: 'stream-player',
+      component: require('@/components/StreamPlayer').default
+    },
+    {
       path: '*',
       redirect: '/'
     }

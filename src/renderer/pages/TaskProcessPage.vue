@@ -21,14 +21,10 @@
         </mu-list>
       </section>
 
-      <section>
-        <transition name="fade">
-          <div v-show="showPlayer">
-            <mu-sub-header>{{ onPlayTitle }}</mu-sub-header>
-            <video class="player" controls></video>
-          </div>
-        </transition>
-      </section>
+    <div v-show="showPlayer">
+      <mu-sub-header>{{ onPlayTitle }}</mu-sub-header>
+      <video class="player" controls></video>
+    </div>
 
     <mu-dialog :open="showAddNewTaskDialog" title="添加新任务" @close="closeNewTaskDialog">
       <h3>普通任务</h3><br/>
@@ -142,7 +138,7 @@ export default {
     },
     getSelectedTask () {
       if (this.tasks[this.taskSelected].kind === 'BT') {
-        return this.$btClient.get(this.tasks[this.taskSelected].torrentId)
+        return this.$btClient.get(this.tasks[this.taskSelected].torrentId.infoHash)
       } else {
         // TODO: return no-bt task
       }
@@ -408,12 +404,5 @@ export default {
   max-width: 100%;
   height: auto;
   padding: 0%;
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .5s
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active in below version 2.1.8 */ {
-  opacity: 0
 }
 </style>
