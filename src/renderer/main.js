@@ -3,12 +3,13 @@ import axios from 'axios'
 import WebTorrent from 'webtorrent'
 
 import App from './App'
-import router from './router'
+// import router from './router'
 import store from './store'
 
 import {
   task,
-  setting
+  setting,
+  done
 } from './datastore'
 
 // dev
@@ -32,13 +33,14 @@ client.on('error', err => {
 Vue.prototype.$btClient = client
 Vue.prototype.$db = {
   task,
-  setting
+  setting,
+  done
 }
 
 /* eslint-disable no-new */
 new Vue({
   components: { App },
-  router,
+  // router,
   store,
   template: '<App/>'
 }).$mount('#app')

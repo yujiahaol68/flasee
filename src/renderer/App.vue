@@ -9,25 +9,23 @@
       <div class="content">
         <div class="content-left">
           <div class="container">
-            <mu-list>
-              <mu-list-item title="进行中" to="/">
+            <mu-list :value="pageSelected" @itemClick="setPage">
+              <mu-list-item title="进行中" value="process">
                 <mu-icon slot="left" value="file_download"/>
               </mu-list-item>
-              <mu-list-item title="已完成" to="/done">
+              <mu-list-item title="已完成" value="done">
                 <mu-icon slot="left" value="done"/>
               </mu-list-item>
-              <mu-list-item title="边下边播" to="/stream_play">
+              <mu-list-item title="边下边播" value="player">
                 <mu-icon slot="left" value="movie"/>
               </mu-list-item>
             </mu-list>
           </div>
         </div>
         <div class="content-right">
-          <keep-alive>
-            <transition name="fade">
-              <router-view></router-view>
-            </transition>
-          </keep-alive>
+          <task-process-page v-show="pageShowStatus[0]"></task-process-page>
+          <done-task-page v-show="pageShowStatus[1]"></done-task-page>
+          <stream-player-page v-show="pageShowStatus[2]"></stream-player-page>
         </div>
       </div>
     </div>
@@ -35,9 +33,47 @@
 </template>
 
 <script>
-  export default {
-    name: 'flasee'
+import TaskProcessPage from './pages/TaskProcessPage'
+import DoneTask from './components/DoneTask'
+import StreamPlayer from './components/StreamPlayer'
+
+export default {
+  name: 'flasee',
+  data () {
+    return {
+      pageSelected: 'process',
+      pageShowStatus: [true, false, false]
+    }
+  },
+  components: {
+    TaskProcessPage,
+    'done-task-page': DoneTask,
+    'stream-player-page': StreamPlayer
+  },
+  watch: {
+    pageSelected: function (newPage) {
+      for (let i = 0; i < this.pageShowStatus.length; i++) {
+        this.pageShowStatus[i] = false
+      }
+      switch (newPage) {
+        case 'process':
+          this.pageShowStatus[0] = true
+          break
+        case 'done':
+          this.pageShowStatus[1] = true
+          break
+        case 'player':
+          this.pageShowStatus[2] = true
+          break
+      }
+    }
+  },
+  methods: {
+    setPage (item) {
+      this.pageSelected = item.value
+    }
   }
+}
 </script>
 
 <style>

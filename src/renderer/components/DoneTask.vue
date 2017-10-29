@@ -241,7 +241,7 @@ th {
   text-align: left;
   font-weight: 500;
   font-size: 12px;
-  color: black;
+  color: #fff;
   text-transform: uppercase;
 }
 
@@ -251,7 +251,7 @@ td {
   vertical-align:middle;
   font-weight: 300;
   font-size: 12px;
-  color: black;
+  color: #fff;
   border-bottom: solid 1px rgba(255,255,255,0.1);
 }
 </style>
