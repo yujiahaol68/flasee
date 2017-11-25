@@ -29,6 +29,7 @@ install:
 - source ~/.bashrc
 - npm install -g xvfb-maybe
 - yarn
+- yarn autoclean
 script:
 - yarn run build
 branches:
