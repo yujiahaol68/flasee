@@ -6,6 +6,8 @@
 
 > A fast downloader implements by electron and vue.js
 
+![](preview/01.png)
+
 ## Support protocol
 
 * BT .torrent
@@ -35,3 +37,4 @@ npm run lint
 
 * [electron-vue](https://github.com/SimulatedGREG/electron-vue)
 * [vue-cli](https://github.com/vuejs/vue-cli)
+* [web-torrent](https://github.com/webtorrent/webtorrent)
